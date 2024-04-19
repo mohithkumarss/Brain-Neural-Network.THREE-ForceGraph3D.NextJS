@@ -2,7 +2,7 @@
 import React, { useEffect, useRef } from "react";
 import * as THREE from "three";
 import ForceGraph3D from "react-force-graph-3d";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client"; // Import createRoot
 
 interface Node {
   id: number;
@@ -21,7 +21,7 @@ interface GraphData {
 
 const initialData: GraphData = { nodes: [{ id: 0, val: 0 }], links: [] };
 
-const N = 100; // Reduce the number of nodes
+const N = 100; // Number of nodes
 const nodes: Node[] = [...Array(N).keys()].map((i) => {
   return {
     id: i,
@@ -51,13 +51,19 @@ const distance = 1500;
 
 const NeuralB: React.FC = () => {
   const graphElemRef = useRef<HTMLDivElement>(null);
-  let graphInstance: any = null; // Store the graph instance
 
   useEffect(() => {
     const graphElem = graphElemRef.current!;
-
     const group = new THREE.Group();
-    const GraphComponent = (
+
+    // Create a root element (assuming you have a container with id="root")
+    const rootElement = document.getElementById("root");
+    const root = rootElement
+      ? createRoot(rootElement)
+      : createRoot(document.body); // Use body as a fallback
+
+    // Render the ForceGraph3D component using createRoot
+    root.render(
       <ForceGraph3D
         graphData={gData}
         nodeThreeObject={(node: Node) => {
@@ -90,44 +96,6 @@ const NeuralB: React.FC = () => {
         }}
       />
     );
-
-    ReactDOM.render(GraphComponent, graphElem);
-
-    const createGraphInstance = () => {
-      graphInstance = (
-        <ForceGraph3D
-          graphData={gData}
-          nodeThreeObject={(node: Node) => {
-            const obj = new THREE.Mesh(
-              new THREE.SphereGeometry(5),
-              new THREE.MeshBasicMaterial({
-                color: "white",
-                transparent: true,
-                opacity: 0.8,
-              })
-            );
-            obj.userData = {
-              ...node,
-              origPos: {
-                x: obj.position.x,
-                y: obj.position.y,
-                z: obj.position.z,
-              },
-            };
-            group.add(obj);
-            return obj;
-          }}
-          linkOpacity={0.8}
-          linkCurvature={0.2}
-          linkWidth={1}
-          linkDirectionalParticles={1}
-          linkDirectionalParticleWidth={1}
-          onEngineTick={() => {
-            group.rotation.y += 0.01; // Continuous loop rotation
-          }}
-        />
-      );
-    };
   }, []);
 
   return <div ref={graphElemRef} id="3d-graph" />;
